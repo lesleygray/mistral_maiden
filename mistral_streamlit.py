@@ -29,7 +29,7 @@ Limitations:
 """
 
 # -------------------------------
-# CONFIG
+# Set env
 concepts_clean = "vocabularies/CONCEPT_cleaned.csv"
 concepts_clean_index = "vocabularies/CONCEPT_cleaned.faiss"
 embeddings_model = "all-MiniLM-L6-v2"
@@ -41,14 +41,13 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"  # HuggingFace tokenizers
 os.environ["LLAMA_CPP_THREADS"] = "1"  # Llama-cpp specific (optional)
 query_history = []
 
-
-# -------------------------------
-
 # Globals (set in init_models)
 concept_df = None
 faiss_index = None
 embeddings = None
 llm = None
+
+# -------------------------------
 
 # Load data
 def load_concepts():
@@ -77,18 +76,6 @@ def init_models():
 def get_top_omop_concepts(query, k=5):
     query_vec = embeddings.encode([query])
     D, I = faiss_index.search(query_vec, k)
-    #concepts = [concept_df.iloc[i]["text"] for i in I[0]]
-
-    # debug
-    # print("Indexes returned from FAISS:", I)
-    # print("Concept DataFrame shape:", concept_df.shape)
-    # print("Concept DataFrame columns:", concept_df.columns)
-    concepts = concept_df.iloc[I[0]]["text"].tolist()
-    #concepts = [
-    #    concept_df.iloc[i]["text"]
-    #    for i in I[0]
-    #    if 0 <= i < len(concept_df) and "text" in concept_df.columns
-    #]
     return "\n".join([f"{i+1}. {c}" for i, c in enumerate(concepts)])
 
 # Run prompt through LLM
@@ -98,9 +85,7 @@ def run_prompt(prompt):
 
 # Improve output with concept match
 def find_best_concept_match(output_text):
-    print("OK22")
     print(output_text)
-    print("OK33")
     try:
         # Throws message of malformatted json 
         #parsed = json.loads(output_text.split("```")[-1])
@@ -168,9 +153,7 @@ def main():
         """
         
         response = run_prompt(q)
-        #response = '{"omop_target_table": "", "omop_target_field": "", "omop_concept_id": "", "data_type_mapping": "", "pii_detection": false, "consent_detection": false, "consent_mapping": "", "confidence_score": 0.85}'
         print("Response is: " + response)
-        print("OK11")
         enhanced_output = find_best_concept_match(response)
 
         # Log history
